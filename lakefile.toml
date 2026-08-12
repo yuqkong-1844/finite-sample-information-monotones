@@ -1,0 +1,56 @@
+name = "DPI_RKO_Lean_paper_results"
+version = "1.0.0"
+defaultTargets = ["PaperProofs"]
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "v4.32.0"
+
+[[lean_lib]]
+name = "PaperProofs"
+roots = [
+  "PaperProofs",
+  "GeneralAsymmetricC1",
+  "AsymmetricPolynomialCorollary",
+  "SquareRowCone",
+  "SquarePolynomialCoordinates",
+  "SquareDeterminantDoubleContact",
+  "SquareSimplexMilestone",
+  "SquareOpenBoxIdentity",
+  "SquareTauHomogenization",
+  "GenericDeterminantIrreducible",
+  "SquareDeterminantGauss",
+  "SquarePositiveDeterminantGraph",
+  "SquareTauHomContact",
+  "SquareDoubleContactOnBox",
+  "SquareDeterminantGaussIntegration",
+  "SquareSimplexTheorem",
+  "SquareDegreeBound",
+  "ConstantCompensation",
+  "FrobeniusDependence",
+  "CopositiveDPIRecognition",
+  "WidePolynomialSetup",
+  "MaximalMinorDefs",
+  "MaximalMinorSchurChart",
+  "WideSquarePullback",
+  "WideTauHomConeContact",
+  "WidePositiveSchurGraph",
+  "WideLocalDoubleContact",
+  "WideSchurCoordinates",
+  "WideLocalMinorSquare",
+  "FiniteSubsetOrder",
+  "GenericMinorBasic",
+  "SignedLaplaceProduct",
+  "LaplaceExchange",
+  "LaplaceInclusionExclusion",
+  "LaplaceStraightening",
+  "DuplicatedFinsetOrder",
+  "RectangularMinorStraightening",
+  "StandardMinorProducts",
+  "StandardMinorIndependence",
+  "MaximalMinorFiltration",
+  "MaximalMinorWeight",
+  "MaximalMinorSquareSaturation",
+  "WideSimplexTheorem",
+]

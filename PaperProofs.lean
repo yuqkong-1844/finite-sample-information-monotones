@@ -1,0 +1,61 @@
+import «GeneralAsymmetricC1»
+import «AsymmetricPolynomialCorollary»
+import «SquareSimplexTheorem»
+import «SquareDegreeBound»
+import «WideSimplexTheorem»
+import «ConstantCompensation»
+import «FrobeniusDependence»
+import «CopositiveDPIRecognition»
+
+/-!
+# Machine-checked entry point for the paper's main results
+
+Importing this file checks the final theorems for all three dimension regimes,
+together with every algebraic and analytic lemma on which they depend.
+-/
+
+#check GeneralAsymmetricC1.rko_iff_rankOneVanishing
+#check GeneralAsymmetricC1.general_asymmetric_simplex_C1_openNeighborhood
+#check AsymmetricPolynomial.asymmetric_polynomial_mem_simplex_ideal
+#check SquarePolynomial.square_simplex_det_sq
+#check SquarePolynomial.square_simplex_totalDegree_lower_bound
+#check WidePolynomial.wide_simplex_maximalMinor_sq
+#check WidePolynomial.wide_simplex_totalDegree_lower_bound
+#check WidePolynomial.maximalMinorIdeal_isPrime
+#check WidePolynomial.maximalMinorIdeal_sq_isPrimary
+#check SquarePolynomial.compensationRatioSet_bddAbove
+#check SquarePolynomial.compensatedEval_dpi_of_compensationSup_le
+#check SquarePolynomial.exists_constantCompensation_dpi
+#check FrobeniusDependence.fdi_eq_zero_iff_rank_eq_one
+#check FrobeniusDependence.fdi_restricted_dpi
+#check FrobeniusDependence.restrictedChannel_iff_mem_convexHull
+#check FrobeniusDependence.fdi_convexHull_dpi
+#check FrobeniusDependence.fdi_not_full_dpi
+#check CopositiveDPIRecognition.recognitionPoly_dpi_iff_copositive
+#check CopositiveDPIRecognition.rationalRecognitionPoly_dpi_iff_copositive
+#check CopositiveDPIRecognition.recognitionPoly_rowSymmetricOnSimplex
+#check CopositiveDPIRecognition.recognitionPoly_rankOneVanishing
+#check CopositiveDPIRecognition.copositive_semantically_reduces_to_dpi
+
+#print axioms GeneralAsymmetricC1.rko_iff_rankOneVanishing
+#print axioms GeneralAsymmetricC1.general_asymmetric_simplex_C1_openNeighborhood
+#print axioms AsymmetricPolynomial.asymmetric_polynomial_mem_simplex_ideal
+#print axioms SquarePolynomial.square_simplex_det_sq
+#print axioms SquarePolynomial.square_simplex_totalDegree_lower_bound
+#print axioms WidePolynomial.wide_simplex_maximalMinor_sq
+#print axioms WidePolynomial.wide_simplex_totalDegree_lower_bound
+#print axioms WidePolynomial.maximalMinorIdeal_isPrime
+#print axioms WidePolynomial.maximalMinorIdeal_sq_isPrimary
+#print axioms SquarePolynomial.compensationRatioSet_bddAbove
+#print axioms SquarePolynomial.compensatedEval_dpi_of_compensationSup_le
+#print axioms SquarePolynomial.exists_constantCompensation_dpi
+#print axioms FrobeniusDependence.fdi_eq_zero_iff_rank_eq_one
+#print axioms FrobeniusDependence.fdi_restricted_dpi
+#print axioms FrobeniusDependence.restrictedChannel_iff_mem_convexHull
+#print axioms FrobeniusDependence.fdi_convexHull_dpi
+#print axioms FrobeniusDependence.fdi_not_full_dpi
+#print axioms CopositiveDPIRecognition.recognitionPoly_dpi_iff_copositive
+#print axioms CopositiveDPIRecognition.rationalRecognitionPoly_dpi_iff_copositive
+#print axioms CopositiveDPIRecognition.recognitionPoly_rowSymmetricOnSimplex
+#print axioms CopositiveDPIRecognition.recognitionPoly_rankOneVanishing
+#print axioms CopositiveDPIRecognition.copositive_semantically_reduces_to_dpi
