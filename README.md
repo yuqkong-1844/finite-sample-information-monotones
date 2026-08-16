@@ -2,107 +2,100 @@
 
 This repository contains the Lean 4 formalization accompanying the paper
 [*Finite-Sample Unbiasedly Estimable Information Monotones*](https://arxiv.org/abs/2606.14225).
-
 The machine-checked entry point is [`PaperProofs.lean`](PaperProofs.lean).
 
-The formalization verifies the paper's principal rigidity and classification
-results in all three dimension regimes. It also develops a reusable body of
-determinantal algebra, including a Lean formalization of the classical theorem
-that every positive power of the generic maximal-minor ideal over an arbitrary
-integral domain is primary.
+The formalization covers the paper's fixed-alphabet algebraic and analytic
+core: the zero-row principle, the tall-case collapse, the non-tall
+determinantal classification and degree bound, the binary
+independence-faithfulness classification, and the supporting determinantal
+algebra.
 
 ## Motivation
 
-Let $U=(u_{i\alpha})$ be the joint probability matrix of two finite random
-variables. A functional of $U$ that is a polynomial of degree at most $d$
-admits an unbiased estimator from $d$ independent samples. This motivates the
-study of polynomial measures of dependence satisfying two information-theoretic
-requirements:
+Let $U=(u_{i\alpha})\in\Delta_{n,m}$ be the joint-distribution matrix of two
+finite random variables, where stochastic post-processing acts on the
+$n$-state row variable. On a finite domain, the paper relates unbiased
+estimability from a fixed number of samples to polynomial dependence on the
+entries of $U$, with polynomial degree giving exact sample complexity.
 
-1. **rank-one vanishing:** the functional vanishes on product distributions;
-2. **data processing:** randomized post-processing cannot increase the
-   functional.
+The formalization studies the resulting algebraic question. How restrictive
+are the following two properties?
 
-The results formalized here show that these requirements impose strong
-algebraic rigidity. In the taller case $n>m$, they force vanishing on the
-simplex; in the square case $n=m$, they force a determinant-square factor
-modulo the simplex equation; and in the wide case $n<m$, they force membership
-in the square of the maximal-minor ideal modulo the simplex equation.
+1. **Independence-zero:** $F(U)=0$ whenever the two variables are
+   independent.
+2. **Left-sided fixed-alphabet DPI:** $F(TU)\le F(U)$ for every
+   $n\times n$ column-stochastic matrix $T$.
 
-The development also verifies a Frobenius dependence functional under a
-restricted class of stochastic channels and formalizes the semantic reduction
-from copositivity to DPI recognition.
+The Lean development begins with these analytic and polynomial conditions. It
+does not formalize the statistical equivalence between unbiased estimability
+and polynomial representation.
 
-## Setup and notation
+## Definitions and the independence-zero bridge
 
-For integers $n,m\ge 1$, define the probability simplex
+The probability simplex is
 
 $$
 \Delta_{n,m}
-=\{U\in\mathbb R^{n\times m} :
-u_{i\alpha}\ge 0,\ 
-\sum_{i,\alpha}u_{i\alpha}=1\}.
+=\{\,U\in\mathbb{R}^{n\times m}:
+u_{i\alpha}\ge0,\ \sum_{i,\alpha}u_{i\alpha}=1\,\}.
 $$
 
-For an $n\times n$ column-stochastic matrix $T$, the formalized left-sided
-data-processing inequality (DPI) is $F(TU)\le F(U)$ for
-$U\in\Delta_{n,m}$.
+For a joint-distribution matrix, independence is equivalent to
 
-Rank-one vanishing means that $F(U)=0$ whenever
-$U\in\Delta_{n,m}$ and $\mathrm{rank}(U)\le 1$.
+$$
+U=r(U)c(U)^\top,
+$$
 
-For a polynomial $P\in\mathbb R[u_{i\alpha}]$, write
-$\tau=\sum_{i,\alpha}u_{i\alpha}$. Thus the affine probability simplex lies in
-the hyperplane $\tau=1$.
+and hence to
 
-In Lean, rectangular matrices are represented by the definitionally equal
-iterated function type
+$$
+\mathrm{rank}(U)=1.
+$$
+
+Because a simplex matrix has total mass $1$, it is nonzero. Consequently,
+on $\Delta_{n,m}$, the conditions
+
+$$
+X\perp Y,
+\qquad \mathrm{rank}(U)=1,
+\qquad \mathrm{rank}(U)\le1
+$$
+
+are equivalent. Thus the paper's **independence-zero** assumption is exactly
+rank-one vanishing on the simplex.
+
+The original Lean API uses the outer-product formulation
 
 ```lean
-Fin n → Fin m → ℝ
+def RKO (F : Mat n m → ℝ) : Prop :=
+  ∀ x y, Simplex (outer x y) → F (outer x y) = 0
 ```
 
-and `Matrix.of` is used when matrix rank is needed.
+and the paper-facing API uses matrix rank:
 
-## Main results verified by Lean
+```lean
+def RankOneVanishing (F : Mat n m → ℝ) : Prop :=
+  ∀ U, Simplex U → (Matrix.of U).rank ≤ 1 → F U = 0
+```
 
-Every theorem in this section is imported and checked by
-[`PaperProofs.lean`](PaperProofs.lean).
-
-### Rank-one vanishing bridge
-
-The internal development initially uses an outer-product formulation of
-rank-one vanishing. Lean proves that, on the probability simplex, this is
-equivalent to the rank-at-most-one formulation used in the paper.
-
-**Theorem (outer-product vanishing iff rank-one vanishing).**
-For a functional $F:\mathbb R^{n\times m}\to\mathbb R$, the two formulations
-of rank-one vanishing are equivalent on $\Delta_{n,m}$:
-
-$$
-\bigl(\forall x,y,\ F(xy^{\mathsf T})=0\bigr)
-\quad\Longleftrightarrow\quad
-\bigl(\forall U,\ \mathrm{rank}(U)\le 1\Rightarrow F(U)=0\bigr),
-$$
-
-where the quantifiers are restricted to points satisfying the relevant simplex
-conditions.
+Lean proves the exact equivalence:
 
 ```lean
 GeneralAsymmetricC1.rko_iff_rankOneVanishing
 ```
 
-The supporting development also proves that every outer product has rank at
-most one and that every real matrix of rank at most one admits an outer-product
+The proof includes both algebraic directions: every outer product has rank at
+most one, and every real matrix of rank at most one has an outer-product
 representation.
 
-### Dimension-free zero-row vanishing: $n,m\ge 2$
+## Main results verified by Lean
 
-**Theorem (zero-row vanishing principle).**
-Let $n,m\ge 2$, let $\Omega\subseteq\mathbb R^{n\times m}$ be open with
-$\Delta_{n,m}\subseteq\Omega$, and suppose that $F$ is $C^1$ on $\Omega$,
-satisfies left-sided DPI on the simplex, and vanishes on rank-at-most-one
-simplex matrices. If $U\in\Delta_{n,m}$ has a zero row, then
+### Zero-row vanishing
+
+**Theorem (zero-row vanishing principle).** Let $n,m\ge2$. Suppose
+$F:\Delta_{n,m}\to\mathbb{R}$ is $C^1$-extendable, satisfies left-sided
+fixed-alphabet DPI, and is independence-zero. If $U\in\Delta_{n,m}$ has a
+zero row, then
 
 $$
 F(U)=0.
@@ -112,147 +105,152 @@ $$
 GeneralAsymmetricC1.zero_row_vanishing_openNeighborhood
 ```
 
-The differential argument already handles $n\ge3$. The final paper also
-states the result for $n=2$; Lean closes that boundary case separately by
-observing that a two-row simplex matrix with one zero row is itself an outer
-product. No global differentiability assumption is introduced.
+Here $C^1$-extendable has the same meaning as in the paper: $F$ is the
+restriction of a function that is $C^1$ on an open neighborhood of the
+closed simplex. In Lean this is encoded by an ambient function, an open set
+$\Omega$, the inclusion $\Delta_{n,m}\subseteq\Omega$, and
+`ContDiffOn ℝ 1 F Ω`. No global differentiability assumption is used.
 
-### Taller processed alphabet: $n>m\ge 2$
+The formalized differential argument handles $n\ge3$; the $n=2$ boundary
+case is closed separately by observing that a two-row simplex matrix with one
+zero row is already an outer product.
 
-The first rigidity theorem concerns the regime in which the processed alphabet
-is strictly larger than the reported alphabet.
+### Tall case: $n>m\ge2$
 
-**Theorem (tall-case $C^1$ rigidity).**
-Let $n>m\ge 2$, let $\Omega\subseteq\mathbb R^{n\times m}$ be open with
-$\Delta_{n,m}\subseteq\Omega$, and let
-$F:\mathbb R^{n\times m}\to\mathbb R$. Assume that:
-
-1. $F$ is $C^1$ on $\Omega$;
-2. $F$ satisfies left-sided DPI on $\Delta_{n,m}$;
-3. $F(U)=0$ for every $U\in\Delta_{n,m}$ with
-   $\mathrm{rank}(U)\le 1$.
-
-Then
+**Theorem (tall-case impossibility).** Let $n>m\ge2$. If
+$F:\Delta_{n,m}\to\mathbb{R}$ is $C^1$-extendable, satisfies left-sided
+fixed-alphabet DPI, and is independence-zero, then
 
 $$
-F(U)=0
-\qquad\text{for every }U\in\Delta_{n,m}.
+F\equiv0\quad\text{on }\Delta_{n,m}.
 $$
-
-The Lean theorem assumes `ContDiffOn ℝ 1 F Ω`, so it requires only $C^1$
-regularity on an open neighborhood of the simplex, not global $C^1$
-regularity.
 
 ```lean
 GeneralAsymmetricC1.general_asymmetric_simplex_C1_openNeighborhood
 ```
 
-**Corollary (tall-case polynomial factorization).**
-Let $P\in\mathbb R[u_{i\alpha}]$ satisfy the polynomial tall-case hypotheses.
-Then there exists a polynomial $Q$ such that $P=(\tau-1)Q$. Equivalently,
-$P\in\langle\tau-1\rangle$.
+For a polynomial $P\in\mathbb{R}[u_{i\alpha}]$, let
 
-Thus every such polynomial vanishes identically on the affine simplex
-hyperplane.
+$$
+\tau=\sum_{i,\alpha}u_{i\alpha}.
+$$
+
+The polynomial corollary is
+
+$$
+P\in(\tau-1),
+$$
+
+so $P$ vanishes on the entire affine simplex hyperplane:
 
 ```lean
 AsymmetricPolynomial.asymmetric_polynomial_mem_simplex_ideal
 ```
 
-### Equal alphabet sizes: $n=m\ge 2$
+### Non-tall case: $2\le n\le m$
 
-In the square case, the determinant gives the fundamental algebraic
-obstruction.
-
-**Theorem (square-case determinant-square classification).**
-Let $n\ge 2$, and let $P\in\mathbb R[u_{i\alpha}]$ satisfy left-sided DPI and
-rank-one vanishing on $\Delta_{n,n}$. Then there exist polynomials $Q$ and $K$
-such that
+Let $R_{n,m}=\mathbb{R}[u_{i\alpha}]$, and let $I_n\subseteq R_{n,m}$ be
+the ideal generated by the maximal $n\times n$ minors of the generic
+$n\times m$ matrix. Write bars for images in the simplex coordinate ring
 
 $$
-P=(\det U)^2Q+(\tau-1)K.
+\overline{R}_{n,m}=R_{n,m}/(\tau-1).
 $$
 
-Equivalently,
-$P\in\langle(\det U)^2\rangle+\langle\tau-1\rangle$.
-Hence, modulo the affine simplex equation $\tau=1$, every such polynomial is
-divisible by $(\det U)^2$.
+**Theorem (non-tall determinantal rigidity).** Let $2\le n\le m$, and let
+$P\in R_{n,m}$. If the restriction of $P$ to $\Delta_{n,m}$ satisfies
+left-sided fixed-alphabet DPI and independence-zero, then
+
+$$
+\overline{P}\in\overline{I}_n^{\,2}.
+$$
+
+Consequently, either $P\equiv0$ on the simplex or
+
+$$
+\deg P\ge2n.
+$$
+
+This is the current paper's unified non-tall theorem. Lean verifies it by the
+same mathematical case split used in the detailed proof:
+
+- when $m=n$, $I_n=(\det U)$, and Lean proves
+
+$$
+P=(\det U)^2Q+(\tau-1)K;
+$$
+
+- when $m>n$, Lean proves
+
+$$
+P\in I_n^2+(\tau-1).
+$$
+
+The corresponding declarations are
 
 ```lean
 SquarePolynomial.square_simplex_det_sq
-```
-
-**Corollary (square-case degree lower bound).**
-Under the hypotheses above, if $P$ is nonzero at some point of
-$\Delta_{n,n}$, then
-$2n\le\mathrm{totalDegree}(P)$.
-
-```lean
 SquarePolynomial.square_simplex_totalDegree_lower_bound
-```
-
-The formalization also proves a converse-type construction by constant
-compensation.
-
-**Theorem (constant compensation).**
-Let $n\ge 2$, and let $P$ be a polynomial that is row-symmetric on
-$\Delta_{n,n}$. Then there exists $M\ge 0$ such that
-
-$$
-U\longmapsto(\det U)^2\bigl(P(U)+M\bigr)
-$$
-
-satisfies left-sided DPI on $\Delta_{n,n}$.
-
-More precisely, the Lean development defines the normalized-defect supremum 
-$M_{\*}(P)$, proves that it is finite, and proves that every
-$M\ge\max\lbrace 0,M_*(P)\rbrace$ is a valid compensation constant.
-
-```lean
-SquarePolynomial.compensationRatioSet_bddAbove
-SquarePolynomial.compensatedEval_dpi_of_compensationSup_le
-SquarePolynomial.exists_constantCompensation_dpi
-```
-
-### Wider reported alphabet: $2\le n<m$
-
-Let $R=\mathbb R[u_{i\alpha}]$ be the polynomial ring of the generic
-$n\times m$ matrix, and let $I_n\subseteq R$ be the ideal generated by its
-maximal $n\times n$ minors.
-
-**Theorem (wide-case maximal-minor-square classification).**
-Let $2\le n<m$, and let $P\in R$ satisfy left-sided DPI and rank-one vanishing
-on $\Delta_{n,m}$. Then 
-
-$$P\in I_n^2+\langle\tau-1\rangle.$$
-
-Equivalently, there exist $Q\in I_n^2$ and $K\in R$ such that
-$P=Q+(\tau-1)K$.
-
-Thus, modulo the affine simplex equation, $P$ belongs to the square of the
-maximal-minor ideal.
-
-```lean
 WidePolynomial.wide_simplex_maximalMinor_sq
-```
-
-**Corollary (wide-case degree lower bound).**
-Under the hypotheses above, if $P$ is nonzero at some point of
-$\Delta_{n,m}$, then
-$2n\le\mathrm{totalDegree}(P)$.
-
-```lean
 WidePolynomial.wide_simplex_totalDegree_lower_bound
 ```
 
-### One-sided independence-faithfulness
+The qualification “nonzero” in the degree conclusion means nonzero as a
+function on the simplex. A nonzero ambient polynomial may lie in
+$(\tau-1)$ and therefore restrict to zero on $\Delta_{n,m}$.
 
-A functional is independence-faithful when its zero set on the simplex is
-exactly the rank-one locus.
+### Sharpness: the Gram determinant
 
-**Theorem ($C^1$-extendable one-sided faithfulness classification).**
-For $n,m\ge2$, there exists a $C^1$-extendable independence-faithful
-functional satisfying left-sided DPI on the $n$-state variable if and only if
+For every $2\le n\le m$, define
+
+$$
+F_{\mathrm{Gram}}(U)=\det(UU^\top).
+$$
+
+Lean proves that its generic polynomial is nonzero, has exact total degree
+$2n$, satisfies left-sided DPI and independence-zero, and belongs to
+$I_n^2$. Thus it attains the degree bound in the non-tall theorem.
+
+```lean
+GramDependence.gramDetPoly_paper_properties
+```
+
+The supporting identities include
+
+$$
+F_{\mathrm{Gram}}(TU)
+=(\det T)^2F_{\mathrm{Gram}}(U)
+$$
+
+and
+
+$$
+F_{\mathrm{Gram}}(U)=0
+\quad\Longleftrightarrow\quad
+\mathrm{rank}(U) < n.
+$$
+
+```lean
+GramDependence.gramDet_mul
+GramDependence.gramDet_eq_zero_iff_rank_lt_height
+GramDependence.gramDet_dpi
+```
+
+In the square case this specializes to
+$F_{\mathrm{Gram}}(U)=(\det U)^2$.
+
+### Independence-faithfulness
+
+The paper calls $F$ **independence-faithful** when
+
+$$
+F(U)=0\quad\Longleftrightarrow\quad X\perp Y.
+$$
+
+**Theorem (one-sided $C^1$-extendable faithfulness classification).** For
+$n,m\ge2$, there exists a $C^1$-extendable, independence-faithful
+functional satisfying left-sided fixed-alphabet DPI on the $n$-state
+variable if and only if
 
 $$
 n=2.
@@ -262,173 +260,113 @@ $$
 GeneralAsymmetricC1.exists_C1Extendable_independenceFaithful_dpi_iff
 ```
 
-For $n\ge3$, Lean applies the zero-row theorem to an explicit rank-two
-simplex matrix with a zero row. For $n=2$, Lean uses the Gram-determinant
-functional from the paper,
-
-$$
-F_{\mathrm{Gram}}(U)=\det(UU^{\mathsf T}).
-$$
-
-The formalization proves in arbitrary dimensions that it is nonnegative, that
-its zero set is precisely the matrices whose row rank is less than $n$, and
-that
-
-$$
-F_{\mathrm{Gram}}(TU)=\det(T)^2F_{\mathrm{Gram}}(U).
-$$
-
-The formalized determinant bound gives full left-sided DPI for every number
-of rows. For $2\le n\le m$, Lean also constructs the generic polynomial,
-proves that it is nonzero of exact degree $2n$, proves RKO and DPI, and proves
-that it belongs to the square of the maximal-minor ideal, matching the paper's
-Gram-determinant monotone proposition. On the two-row probability simplex,
-rank zero is impossible, so the zero set is exactly rank one. The functional
-is a global polynomial and hence is $C^1$ on every open neighborhood.
+For $n\ge3$, the zero-row theorem produces dependent distributions on which
+every admissible functional must vanish. For $n=2$, the Gram determinant is
+the paper's explicit witness. Lean proves both its exact zero set on the
+binary simplex and its full left-sided DPI:
 
 ```lean
-GramDependence.gramDet_eq_zero_iff_rank_lt_height
-GramDependence.gramDet_mul
-GramDependence.gramDet_dpi
-GramDependence.gramDetPoly_paper_properties
 GramDependence.gramDet_independenceFaithful
 GramDependence.gramDet_full_dpi_two_rows
 ```
 
+## Other paper results formalized
+
+### Constant compensation in the square case
+
+For a polynomial $P$ that is row-symmetric on $\Delta_{n,n}$, Lean proves
+that there exists $M\ge0$ such that
+
+$$
+U\longmapsto(\det U)^2(P(U)+M)
+$$
+
+satisfies left-sided fixed-alphabet DPI. The formalization also defines the
+paper's normalized-defect supremum $M_{\*}(P)$, proves it is finite, and proves
+that every $M \ge \max\{0, M_{\ast}(P)\}$ works.
+
+```lean
+SquarePolynomial.compensationRatioSet_bddAbove
+SquarePolynomial.compensatedEval_dpi_of_compensationSup_le
+SquarePolynomial.exists_constantCompensation_dpi
+```
+
 ### Frobenius Dependence Index
 
-For $U=(u_{i\alpha})\in\Delta_{n,m}$, define the row and column marginals by
-$r_i=\sum_\alpha u_{i\alpha}$ and
-$c_\alpha=\sum_i u_{i\alpha}$.
-
-The squared Frobenius Dependence Index is
+For $U\in\Delta_{n,m}$, with row marginals $r_i$ and column marginals
+$c_\alpha$, define
 
 $$
 F_{\mathrm{FDI}}(U)
-=\sum_{i,\alpha}
-\bigl(u_{i\alpha}-r_ic_\alpha\bigr)^2.
+=\sum_{i,\alpha}(u_{i\alpha}-r_ic_\alpha)^2.
 $$
 
-**Theorem (zero set of the Frobenius Dependence Index).**
-For every $U\in\Delta_{n,m}$,
-
-$$
-F_{\mathrm{FDI}}(U)=0
-\quad\Longleftrightarrow\quad
-\mathrm{rank}(U)=1.
-$$
-
-Thus the Frobenius Dependence Index vanishes exactly on product
-distributions.
+Lean proves that $F_{\mathrm{FDI}}$ vanishes exactly at independence, that
+it satisfies DPI for the convex hull of doubly-stochastic and rank-one
+channels, and that unrestricted stochastic DPI fails in general. It also
+proves full left-sided DPI in the binary processed case $n=2$.
 
 ```lean
 FrobeniusDependence.fdi_eq_zero_iff_rank_eq_one
-```
-
-In the two-row case Lean additionally proves the exact identity
-$F_{\mathrm{FDI}}(TU)=\det(T)^2F_{\mathrm{FDI}}(U)$ and therefore full
-left-sided DPI:
-
-```lean
-FrobeniusDependence.fdi_mul_two_rows_det
+FrobeniusDependence.restrictedChannel_iff_mem_convexHull
+FrobeniusDependence.fdi_convexHull_dpi
+FrobeniusDependence.fdi_not_full_dpi
 FrobeniusDependence.fdi_full_dpi_two_rows
 ```
 
-**Theorem (restricted-channel DPI for the Frobenius Dependence Index).**
-The functional $F_{\mathrm{FDI}}$ satisfies two-sided DPI for every channel in
-the convex hull of the doubly-stochastic channels and the rank-one erasure
-channels.
+### Semantic reduction from copositivity
 
-The Lean development also proves the corresponding characterization of this
-restricted channel class.
-
-```lean
-FrobeniusDependence.restrictedChannel_iff_mem_convexHull
-FrobeniusDependence.fdi_convexHull_dpi
-```
-
-The restriction is essential.
-
-**Theorem (failure of unrestricted stochastic DPI).**
-There exists an exact rational $4\times3$ counterexample for which
-$F_{\mathrm{FDI}}$ violates unrestricted stochastic DPI.
-
-```lean
-FrobeniusDependence.fdi_not_full_dpi
-```
-
-### Semantic reduction from copositivity to DPI recognition
-
-For a matrix $A$, the formalization constructs an explicit polynomial
-functional of the form
-
-$$
-F_A(U)
-=(\det U)^2 c(U)^{\mathsf T}A c(U),
-$$
-
-where $c(U)$ is the vector appearing in the formalized construction.
-
-**Theorem (copositivity-DPI equivalence).**
-For $n\ge 2$, the constructed polynomial functional satisfies
+The formalization constructs the paper's polynomial $F_A$ and proves
 
 $$
 F_A\text{ satisfies DPI}
 \quad\Longleftrightarrow\quad
-A\text{ is copositive}.
+A\text{ is copositive},
 $$
 
-The equivalence is also exported for rational input matrices.
+including the rational-input formulation used by the complexity reduction.
+The constructed polynomial is also proved row-symmetric on the simplex and
+independence-zero.
 
 ```lean
 CopositiveDPIRecognition.rationalRecognitionPoly_dpi_iff_copositive
-```
-
-The constructed family is also proved to be row-symmetric on the simplex and
-rank-one vanishing.
-
-```lean
 CopositiveDPIRecognition.recognitionPoly_rowSymmetricOnSimplex
 CopositiveDPIRecognition.recognitionPoly_rankOneVanishing
 CopositiveDPIRecognition.copositive_semantically_reduces_to_dpi
 ```
 
-Lean verifies the complete mathematical and semantic reduction. The final
-complexity-theoretic conclusion additionally uses the external theorem that
-strong rational copositivity recognition is coNP-complete.
-
-The repository does **not** claim to formalize that external complexity theorem
-or a complete theory of polynomial-time many-one reductions for rational
-arithmetic circuits.
+Lean verifies the mathematical and semantic reduction. The external
+complexity theorem that strong rational copositivity recognition is
+coNP-complete, and a general formal theory of polynomial-time reductions, are
+not reproduced in this repository.
 
 ## Reusable determinantal algebra
 
-The wide-case proof formalizes in Lean a classical theorem in determinantal
-algebra that is useful independently of probability simplices and information
-theory.
+The wide-case proof develops a coefficient-polymorphic theory of generic
+maximal-minor ideals that is independent of probability simplices and
+information theory.
 
-For the classical result, see Bruns and Vetter,
-[*Determinantal Rings*](https://doi.org/10.1007/BFb0080378),
-Corollary 7.10(a); see also the more general Corollary 9.18.
+Let $D$ be an integral domain, let
 
-### Generic maximal-minor ideals
+$$
+R=D[x_{ij}:1\le i\le p,\ 1\le j\le m],
+\qquad 1\le p\le m,
+$$
 
-**Theorem (generic maximal-minor ideal).**
-Let $D$ be an arbitrary integral domain, let
-$R=D[x_{ij}\mid 1\le i\le p,\ 1\le j\le m]$, and let
-$X=(x_{ij})$ be the generic $p\times m$ matrix with $p\le m$.
-Let $I_p(X)\subseteq R$ be the ideal generated by the maximal
-$p\times p$ minors of $X$.
+and let $I_p(X)\subseteq R$ be the ideal generated by the maximal minors of
+the generic $p\times m$ matrix $X$. Lean proves:
 
-Then $I_p(X)$ is prime, and for every integer $r\ge 1$,
+$$
+I_p(X)\text{ is prime},
+$$
+
+and, for every $r\ge1$,
 
 $$
 I_p(X)^r\text{ is }I_p(X)\text{-primary}.
 $$
 
-In particular, $I_p(X)^2$ is $I_p(X)$-primary.
-
-The corresponding coefficient-polymorphic Lean declarations are
+In particular, $I_p(X)^2$ is primary.
 
 ```lean
 GenericMaximalMinor.maximalMinorIdealOver_isPrime
@@ -436,23 +374,10 @@ GenericMaximalMinor.maximalMinorIdealOver_pow_isPrimary
 GenericMaximalMinor.maximalMinorIdealOver_sq_isPrimary
 ```
 
-### Strong cancellation
-
-The Lean development also proves the following strong cancellation form.
-
-**Theorem (cancellation modulo powers of the maximal-minor ideal).**
-Under the hypotheses above, let $r\ge 1$ and $a,b\in R$. If
-$a\notin I_p(X)$ and $ab\in I_p(X)^r$, then
+The stronger cancellation theorem used in the wide-case globalization is
 
 $$
-b\in I_p(X)^r.
-$$
-
-Equivalently,
-
-$$
-a\notin I_p(X),\qquad
-ab\in I_p(X)^r
+a\notin I_p(X),\quad ab\in I_p(X)^r
 \quad\Longrightarrow\quad
 b\in I_p(X)^r.
 $$
@@ -461,92 +386,41 @@ $$
 GenericMaximalMinor.mem_maximalMinorIdealOver_pow_of_mul_mem_of_not_mem
 ```
 
-The specialization to the real wide-polynomial API, together with the
-fixed-pivot saturation consequence, is exported through
-
-```lean
-WidePolynomial.maximalMinorIdeal_isPrime
-WidePolynomial.maximalMinorIdeal_sq_isPrimary
-WidePolynomial.mem_maximalMinorIdeal_sq_of_pivot_pow_mul_mem
-```
-
-### Straightening and standard-minor basis
-
-The proof of primaryness is supported by a reusable straightening and basis
-theory for generic minors.
-
-**Theorem (two-minor straightening).**
-Over an arbitrary commutative ring, the product of two minors admits the
-formalized straightening expansion into standard minor products.
+The proof is internal to the Lean development. Its reusable components
+include two-minor straightening, linear independence and spanning of standard
+minor products, a basis of the generic polynomial ring, and an exact
+filtration criterion for powers of the maximal-minor ideal:
 
 ```lean
 GenericMaximalMinor.two_minor_straightening
-```
-
-**Theorem (linear independence of standard minor products).**
-The standard products of nonempty minors are linearly independent.
-
-```lean
 GenericMaximalMinor.standardMinorProducts_linearIndependent
-```
-
-**Theorem (spanning by standard minor products).**
-The standard products of nonempty minors span the generic polynomial ring.
-
-```lean
 GenericMaximalMinor.standardMinorProducts_span_eq_top
-```
-
-Consequently, the formalization constructs a basis of the generic polynomial
-ring by standard minor products.
-
-```lean
 GenericMaximalMinor.standardMinorProductBasis
-```
-
-### Characterization of powers of the maximal-minor ideal
-
-The development also proves an exact filtration criterion for membership in
-powers of the maximal-minor ideal.
-
-**Theorem (trailing-degree characterization).**
-For every positive power of the generic maximal-minor ideal, membership is
-characterized exactly by the formalized weight/trailing-degree condition.
-
-```lean
 GenericMaximalMinor.mem_maximalMinorIdealOver_pow_iff_trailingDegree
 ```
 
-Thus the primaryness theorem is not introduced as an external algebraic
-assumption: the straightening theory, basis construction, filtration
-description, cancellation theorem, primality theorem, and primaryness theorem
-are all proved within the Lean development.
+For the classical determinantal-algebra result, see Bruns and Vetter,
+[*Determinantal Rings*](https://doi.org/10.1007/BFb0080378), Corollary
+7.10(a), and the more general Corollary 9.18.
 
 ## Paper-to-Lean correspondence
 
-| Mathematical result | Lean declaration | Source file |
+| Paper statement | Lean declaration | Source file |
 |---|---|---|
-| Outer-product RKO iff rank $\le 1$ vanishing | `GeneralAsymmetricC1.rko_iff_rankOneVanishing` | [`GeneralAsymmetricC1.lean`](GeneralAsymmetricC1.lean) |
-| Zero-row vanishing for every $n,m\ge2$ | `GeneralAsymmetricC1.zero_row_vanishing_openNeighborhood` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
-| $n>m$ open-neighborhood $C^1$ rigidity | `GeneralAsymmetricC1.general_asymmetric_simplex_C1_openNeighborhood` | [`GeneralAsymmetricC1.lean`](GeneralAsymmetricC1.lean) |
+| Independence-zero / rank-one bridge | `GeneralAsymmetricC1.rko_iff_rankOneVanishing` | [`GeneralAsymmetricC1.lean`](GeneralAsymmetricC1.lean) |
+| Zero-row vanishing, $n,m\ge2$ | `GeneralAsymmetricC1.zero_row_vanishing_openNeighborhood` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
+| Tall $C^1$-extendable collapse, $n>m\ge2$ | `GeneralAsymmetricC1.general_asymmetric_simplex_C1_openNeighborhood` | [`GeneralAsymmetricC1.lean`](GeneralAsymmetricC1.lean) |
+| Tall polynomial corollary $P\in(\tau-1)$ | `AsymmetricPolynomial.asymmetric_polynomial_mem_simplex_ideal` | [`AsymmetricPolynomialCorollary.lean`](AsymmetricPolynomialCorollary.lean) |
+| Non-tall rigidity, square branch $m=n$ | `SquarePolynomial.square_simplex_det_sq` | [`SquareSimplexTheorem.lean`](SquareSimplexTheorem.lean) |
+| Non-tall rigidity, wide branch $m>n$ | `WidePolynomial.wide_simplex_maximalMinor_sq` | [`WideSimplexTheorem.lean`](WideSimplexTheorem.lean) |
+| Non-tall degree bound, square branch | `SquarePolynomial.square_simplex_totalDegree_lower_bound` | [`SquareDegreeBound.lean`](SquareDegreeBound.lean) |
+| Non-tall degree bound, wide branch | `WidePolynomial.wide_simplex_totalDegree_lower_bound` | [`WideSimplexTheorem.lean`](WideSimplexTheorem.lean) |
+| Gram-determinant sharpness example | `GramDependence.gramDetPoly_paper_properties` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
 | One-sided $C^1$ faithfulness iff $n=2$ | `GeneralAsymmetricC1.exists_C1Extendable_independenceFaithful_dpi_iff` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
-| $n>m$ polynomial factorization | `AsymmetricPolynomial.asymmetric_polynomial_mem_simplex_ideal` | [`AsymmetricPolynomialCorollary.lean`](AsymmetricPolynomialCorollary.lean) |
-| Square determinant-square classification | `SquarePolynomial.square_simplex_det_sq` | [`SquareSimplexTheorem.lean`](SquareSimplexTheorem.lean) |
-| Square degree lower bound | `SquarePolynomial.square_simplex_totalDegree_lower_bound` | [`SquareDegreeBound.lean`](SquareDegreeBound.lean) |
 | Constant compensation | `SquarePolynomial.exists_constantCompensation_dpi` | [`ConstantCompensation.lean`](ConstantCompensation.lean) |
-| Wide maximal-minor-square classification | `WidePolynomial.wide_simplex_maximalMinor_sq` | [`WideSimplexTheorem.lean`](WideSimplexTheorem.lean) |
-| Wide degree lower bound | `WidePolynomial.wide_simplex_totalDegree_lower_bound` | [`WideSimplexTheorem.lean`](WideSimplexTheorem.lean) |
-| Generic maximal-minor ideal is prime | `GenericMaximalMinor.maximalMinorIdealOver_isPrime` | [`MaximalMinorWeight.lean`](MaximalMinorWeight.lean) |
-| Every positive maximal-minor-ideal power is primary | `GenericMaximalMinor.maximalMinorIdealOver_pow_isPrimary` | [`MaximalMinorWeight.lean`](MaximalMinorWeight.lean) |
-| Strong cancellation for maximal-minor-ideal powers | `GenericMaximalMinor.mem_maximalMinorIdealOver_pow_of_mul_mem_of_not_mem` | [`MaximalMinorWeight.lean`](MaximalMinorWeight.lean) |
-| Gram determinant vanishes below full row rank | `GramDependence.gramDet_eq_zero_iff_rank_lt_height` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
-| Gram determinant transformation law | `GramDependence.gramDet_mul` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
-| Full non-tall Gram-determinant monotone proposition | `GramDependence.gramDetPoly_paper_properties` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
-| Gram determinant gives the binary faithful full-DPI witness | `GramDependence.gramDet_full_dpi_two_rows` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
-| FDI vanishes exactly at rank one | `FrobeniusDependence.fdi_eq_zero_iff_rank_eq_one` | [`FrobeniusDependence.lean`](FrobeniusDependence.lean) |
-| FDI satisfies full left DPI for two rows | `FrobeniusDependence.fdi_full_dpi_two_rows` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
-| FDI convex-hull DPI | `FrobeniusDependence.fdi_convexHull_dpi` | [`FrobeniusDependence.lean`](FrobeniusDependence.lean) |
+| FDI restricted-channel DPI | `FrobeniusDependence.fdi_convexHull_dpi` | [`FrobeniusDependence.lean`](FrobeniusDependence.lean) |
 | Rational copositivity/DPI equivalence | `CopositiveDPIRecognition.rationalRecognitionPoly_dpi_iff_copositive` | [`CopositiveDPIRecognition.lean`](CopositiveDPIRecognition.lean) |
+| Generic maximal-minor powers are primary | `GenericMaximalMinor.maximalMinorIdealOver_pow_isPrimary` | [`MaximalMinorWeight.lean`](MaximalMinorWeight.lean) |
 
 ## Reproducing the verification
 
@@ -563,15 +437,15 @@ lake build
 lake env lean PaperProofs.lean
 ```
 
-The first two Lake commands obtain the pinned dependencies and the precompiled
-mathlib cache. A successful verification ends with exit code `0`. The theorem
-types and axiom reports printed by `PaperProofs.lean` are informational.
+The first build downloads the pinned dependencies. A successful verification
+ends with exit code `0`. The theorem types and axiom reports printed by
+`PaperProofs.lean` are informational.
 
-To inspect the proofs interactively, open the repository folder in VS Code with
-the official **Lean 4** extension (`leanprover.lean4`), open
-[`PaperProofs.lean`](PaperProofs.lean), and Cmd-click a declaration to jump to
-its proof. Placing the cursor inside a tactic block displays the current goal
-in the Lean Infoview.
+To inspect the proofs interactively, open the repository folder in VS Code
+with the official **Lean 4** extension (`leanprover.lean4`). Open
+[`PaperProofs.lean`](PaperProofs.lean), then Cmd-click a declaration to jump
+to its proof. Placing the cursor inside a tactic block displays the current
+goal in the Lean Infoview.
 
 ## Completeness and axiom audit
 
@@ -579,12 +453,12 @@ The Lean source contains no `sorry`, `admit`, user-declared `axiom`, or
 `unsafe` shortcut. This can be checked with
 
 ```bash
-rg -n '\b(sorry|admit|axiom|unsafe)\b' --glob '*.lean' .
+grep -R -nE '\bsorry\b|\badmit\b|sorryAx|^[[:space:]]*axiom\b' . \
+  --include='*.lean' --exclude-dir=.lake
 ```
 
-The command should print nothing.
-
-The final `#print axioms` commands report only
+The `#print axioms` checks in [`PaperProofs.lean`](PaperProofs.lean) report
+only
 
 ```text
 propext
@@ -598,20 +472,12 @@ which are standard Lean foundations used by mathlib.
 
 For the mathematical results, please cite:
 
-> *Finite-Sample Unbiasedly Estimable Information Monotones*,  
+> *Finite-Sample Unbiasedly Estimable Information Monotones*,
 > [arXiv:2606.14225](https://arxiv.org/abs/2606.14225).
-
-For the classical determinantal-algebra theorem on generic maximal-minor ideals
-and their powers, see:
-
-> Winfried Bruns and Udo Vetter,  
-> [*Determinantal Rings*](https://doi.org/10.1007/BFb0080378),  
-> Corollary 7.10(a); see also Corollary 9.18.
 
 When reusing the Lean code or the general determinantal-algebra development,
 please also cite this repository and identify the release or commit used.
 
 ## License
 
-This formalization is released under the
-[Apache License 2.0](LICENSE).
+This formalization is released under the [Apache License 2.0](LICENSE).
