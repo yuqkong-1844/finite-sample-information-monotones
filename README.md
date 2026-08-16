@@ -96,6 +96,27 @@ The supporting development also proves that every outer product has rank at
 most one and that every real matrix of rank at most one admits an outer-product
 representation.
 
+### Dimension-free zero-row vanishing: $n,m\ge 2$
+
+**Theorem (zero-row vanishing principle).**
+Let $n,m\ge 2$, let $\Omega\subseteq\mathbb R^{n\times m}$ be open with
+$\Delta_{n,m}\subseteq\Omega$, and suppose that $F$ is $C^1$ on $\Omega$,
+satisfies left-sided DPI on the simplex, and vanishes on rank-at-most-one
+simplex matrices. If $U\in\Delta_{n,m}$ has a zero row, then
+
+$$
+F(U)=0.
+$$
+
+```lean
+GeneralAsymmetricC1.zero_row_vanishing_openNeighborhood
+```
+
+The differential argument already handles $n\ge3$. The final paper also
+states the result for $n=2$; Lean closes that boundary case separately by
+observing that a two-row simplex matrix with one zero row is itself an outer
+product. No global differentiability assumption is introduced.
+
 ### Taller processed alphabet: $n>m\ge 2$
 
 The first rigidity theorem concerns the regime in which the processed alphabet
@@ -224,6 +245,56 @@ $2n\le\mathrm{totalDegree}(P)$.
 WidePolynomial.wide_simplex_totalDegree_lower_bound
 ```
 
+### One-sided independence-faithfulness
+
+A functional is independence-faithful when its zero set on the simplex is
+exactly the rank-one locus.
+
+**Theorem ($C^1$-extendable one-sided faithfulness classification).**
+For $n,m\ge2$, there exists a $C^1$-extendable independence-faithful
+functional satisfying left-sided DPI on the $n$-state variable if and only if
+
+$$
+n=2.
+$$
+
+```lean
+GeneralAsymmetricC1.exists_C1Extendable_independenceFaithful_dpi_iff
+```
+
+For $n\ge3$, Lean applies the zero-row theorem to an explicit rank-two
+simplex matrix with a zero row. For $n=2$, Lean uses the Gram-determinant
+functional from the paper,
+
+$$
+F_{\mathrm{Gram}}(U)=\det(UU^{\mathsf T}).
+$$
+
+The formalization proves in arbitrary dimensions that it is nonnegative, that
+its zero set is precisely the matrices whose row rank is less than $n$, and
+that
+
+$$
+F_{\mathrm{Gram}}(TU)=\det(T)^2F_{\mathrm{Gram}}(U).
+$$
+
+The formalized determinant bound gives full left-sided DPI for every number
+of rows. For $2\le n\le m$, Lean also constructs the generic polynomial,
+proves that it is nonzero of exact degree $2n$, proves RKO and DPI, and proves
+that it belongs to the square of the maximal-minor ideal, matching the paper's
+Gram-determinant monotone proposition. On the two-row probability simplex,
+rank zero is impossible, so the zero set is exactly rank one. The functional
+is a global polynomial and hence is $C^1$ on every open neighborhood.
+
+```lean
+GramDependence.gramDet_eq_zero_iff_rank_lt_height
+GramDependence.gramDet_mul
+GramDependence.gramDet_dpi
+GramDependence.gramDetPoly_paper_properties
+GramDependence.gramDet_independenceFaithful
+GramDependence.gramDet_full_dpi_two_rows
+```
+
 ### Frobenius Dependence Index
 
 For $U=(u_{i\alpha})\in\Delta_{n,m}$, define the row and column marginals by
@@ -252,6 +323,15 @@ distributions.
 
 ```lean
 FrobeniusDependence.fdi_eq_zero_iff_rank_eq_one
+```
+
+In the two-row case Lean additionally proves the exact identity
+$F_{\mathrm{FDI}}(TU)=\det(T)^2F_{\mathrm{FDI}}(U)$ and therefore full
+left-sided DPI:
+
+```lean
+FrobeniusDependence.fdi_mul_two_rows_det
+FrobeniusDependence.fdi_full_dpi_two_rows
 ```
 
 **Theorem (restricted-channel DPI for the Frobenius Dependence Index).**
@@ -447,7 +527,9 @@ are all proved within the Lean development.
 | Mathematical result | Lean declaration | Source file |
 |---|---|---|
 | Outer-product RKO iff rank $\le 1$ vanishing | `GeneralAsymmetricC1.rko_iff_rankOneVanishing` | [`GeneralAsymmetricC1.lean`](GeneralAsymmetricC1.lean) |
+| Zero-row vanishing for every $n,m\ge2$ | `GeneralAsymmetricC1.zero_row_vanishing_openNeighborhood` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
 | $n>m$ open-neighborhood $C^1$ rigidity | `GeneralAsymmetricC1.general_asymmetric_simplex_C1_openNeighborhood` | [`GeneralAsymmetricC1.lean`](GeneralAsymmetricC1.lean) |
+| One-sided $C^1$ faithfulness iff $n=2$ | `GeneralAsymmetricC1.exists_C1Extendable_independenceFaithful_dpi_iff` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
 | $n>m$ polynomial factorization | `AsymmetricPolynomial.asymmetric_polynomial_mem_simplex_ideal` | [`AsymmetricPolynomialCorollary.lean`](AsymmetricPolynomialCorollary.lean) |
 | Square determinant-square classification | `SquarePolynomial.square_simplex_det_sq` | [`SquareSimplexTheorem.lean`](SquareSimplexTheorem.lean) |
 | Square degree lower bound | `SquarePolynomial.square_simplex_totalDegree_lower_bound` | [`SquareDegreeBound.lean`](SquareDegreeBound.lean) |
@@ -457,7 +539,12 @@ are all proved within the Lean development.
 | Generic maximal-minor ideal is prime | `GenericMaximalMinor.maximalMinorIdealOver_isPrime` | [`MaximalMinorWeight.lean`](MaximalMinorWeight.lean) |
 | Every positive maximal-minor-ideal power is primary | `GenericMaximalMinor.maximalMinorIdealOver_pow_isPrimary` | [`MaximalMinorWeight.lean`](MaximalMinorWeight.lean) |
 | Strong cancellation for maximal-minor-ideal powers | `GenericMaximalMinor.mem_maximalMinorIdealOver_pow_of_mul_mem_of_not_mem` | [`MaximalMinorWeight.lean`](MaximalMinorWeight.lean) |
+| Gram determinant vanishes below full row rank | `GramDependence.gramDet_eq_zero_iff_rank_lt_height` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
+| Gram determinant transformation law | `GramDependence.gramDet_mul` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
+| Full non-tall Gram-determinant monotone proposition | `GramDependence.gramDetPoly_paper_properties` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
+| Gram determinant gives the binary faithful full-DPI witness | `GramDependence.gramDet_full_dpi_two_rows` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
 | FDI vanishes exactly at rank one | `FrobeniusDependence.fdi_eq_zero_iff_rank_eq_one` | [`FrobeniusDependence.lean`](FrobeniusDependence.lean) |
+| FDI satisfies full left DPI for two rows | `FrobeniusDependence.fdi_full_dpi_two_rows` | [`FinalPaperTheorems.lean`](FinalPaperTheorems.lean) |
 | FDI convex-hull DPI | `FrobeniusDependence.fdi_convexHull_dpi` | [`FrobeniusDependence.lean`](FrobeniusDependence.lean) |
 | Rational copositivity/DPI equivalence | `CopositiveDPIRecognition.rationalRecognitionPoly_dpi_iff_copositive` | [`CopositiveDPIRecognition.lean`](CopositiveDPIRecognition.lean) |
 

@@ -5,6 +5,7 @@ import «SquareDegreeBound»
 import «WideSimplexTheorem»
 import «ConstantCompensation»
 import «FrobeniusDependence»
+import «FinalPaperTheorems»
 import «CopositiveDPIRecognition»
 
 /-!
@@ -15,7 +16,9 @@ together with every algebraic and analytic lemma on which they depend.
 -/
 
 #check GeneralAsymmetricC1.rko_iff_rankOneVanishing
+#check GeneralAsymmetricC1.zero_row_vanishing_openNeighborhood
 #check GeneralAsymmetricC1.general_asymmetric_simplex_C1_openNeighborhood
+#check GeneralAsymmetricC1.exists_C1Extendable_independenceFaithful_dpi_iff
 #check AsymmetricPolynomial.asymmetric_polynomial_mem_simplex_ideal
 #check SquarePolynomial.square_simplex_det_sq
 #check SquarePolynomial.square_simplex_totalDegree_lower_bound
@@ -31,6 +34,15 @@ together with every algebraic and analytic lemma on which they depend.
 #check FrobeniusDependence.restrictedChannel_iff_mem_convexHull
 #check FrobeniusDependence.fdi_convexHull_dpi
 #check FrobeniusDependence.fdi_not_full_dpi
+#check FrobeniusDependence.fdi_mul_two_rows_det
+#check FrobeniusDependence.fdi_full_dpi_two_rows
+#check GramDependence.gramDet_nonneg
+#check GramDependence.gramDet_eq_zero_iff_rank_lt_height
+#check GramDependence.gramDet_mul
+#check GramDependence.gramDet_dpi
+#check GramDependence.gramDetPoly_paper_properties
+#check GramDependence.gramDet_independenceFaithful
+#check GramDependence.gramDet_full_dpi_two_rows
 #check CopositiveDPIRecognition.recognitionPoly_dpi_iff_copositive
 #check CopositiveDPIRecognition.rationalRecognitionPoly_dpi_iff_copositive
 #check CopositiveDPIRecognition.recognitionPoly_rowSymmetricOnSimplex
@@ -38,7 +50,9 @@ together with every algebraic and analytic lemma on which they depend.
 #check CopositiveDPIRecognition.copositive_semantically_reduces_to_dpi
 
 #print axioms GeneralAsymmetricC1.rko_iff_rankOneVanishing
+#print axioms GeneralAsymmetricC1.zero_row_vanishing_openNeighborhood
 #print axioms GeneralAsymmetricC1.general_asymmetric_simplex_C1_openNeighborhood
+#print axioms GeneralAsymmetricC1.exists_C1Extendable_independenceFaithful_dpi_iff
 #print axioms AsymmetricPolynomial.asymmetric_polynomial_mem_simplex_ideal
 #print axioms SquarePolynomial.square_simplex_det_sq
 #print axioms SquarePolynomial.square_simplex_totalDegree_lower_bound
@@ -54,6 +68,14 @@ together with every algebraic and analytic lemma on which they depend.
 #print axioms FrobeniusDependence.restrictedChannel_iff_mem_convexHull
 #print axioms FrobeniusDependence.fdi_convexHull_dpi
 #print axioms FrobeniusDependence.fdi_not_full_dpi
+#print axioms FrobeniusDependence.fdi_mul_two_rows_det
+#print axioms FrobeniusDependence.fdi_full_dpi_two_rows
+#print axioms GramDependence.gramDet_eq_zero_iff_rank_lt_height
+#print axioms GramDependence.gramDet_mul
+#print axioms GramDependence.gramDet_dpi
+#print axioms GramDependence.gramDetPoly_paper_properties
+#print axioms GramDependence.gramDet_independenceFaithful
+#print axioms GramDependence.gramDet_full_dpi_two_rows
 #print axioms CopositiveDPIRecognition.recognitionPoly_dpi_iff_copositive
 #print axioms CopositiveDPIRecognition.rationalRecognitionPoly_dpi_iff_copositive
 #print axioms CopositiveDPIRecognition.recognitionPoly_rowSymmetricOnSimplex

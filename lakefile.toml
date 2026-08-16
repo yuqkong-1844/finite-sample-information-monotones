@@ -29,6 +29,7 @@ roots = [
   "SquareDegreeBound",
   "ConstantCompensation",
   "FrobeniusDependence",
+  "FinalPaperTheorems",
   "CopositiveDPIRecognition",
   "WidePolynomialSetup",
   "MaximalMinorDefs",
